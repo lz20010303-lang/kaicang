@@ -1,0 +1,24 @@
+# Render Blueprint — one free Docker web service in Frankfurt.
+# Docs: https://render.com/docs/blueprint-spec  https://render.com/docs/free
+# Frankfurt is chosen because Binance answers HTTP 451 to US IPs and has
+# been reported to do the same from Singapore cloud IPs.
+services:
+  - type: web
+    name: binance-open-controller
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: MODE
+        value: mock
+      - key: ALLOW_LIVE
+        value: "no"
+      - key: EPHEMERAL_STORAGE
+        value: "yes"
+      - key: TRUST_PROXY
+        value: "yes"
+      - key: REGION_PROBE
+        value: "yes"

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f14" />
+  <title>开仓控制器</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div>
+        <h1>开仓控制器</h1>
+        <p class="sub">币安 U 本位合约 · 以损定仓</p>
+      </div>
+      <div class="badges">
+        <span id="modeBadge" class="badge">—</span>
+        <span class="badge locked" title="固定，不可修改">全仓 · 20x</span>
+      </div>
+    </header>
+
+    <div id="regionBanner" class="site-banner danger hidden" role="alert"></div>
+    <div id="storageBanner" class="site-banner warn hidden"></div>
+
+    <section id="authBar" class="auth hidden">
+      <label for="tokenInput">访问令牌</label>
+      <div class="auth-row">
+        <input id="tokenInput" type="password" autocomplete="off" placeholder="请输入访问令牌" />
+        <button type="button" id="tokenBtn" class="btn secondary">进入</button>
+      </div>
+      <p id="authMsg" class="auth-msg"></p>
+    </section>
+
+    <section class="panel watchlist-panel" aria-labelledby="watchlistTitle">
+      <div class="panel-head">
+        <h2 id="watchlistTitle">自选交易对</h2>
+        <p class="hint tight">只能对已加入自选的交易对开单。看上山寨币时，请先在这里加入自选。</p>
+      </div>
+      <div class="watch-add">
+        <input id="watchInput" type="text" autocomplete="off" spellcheck="false" placeholder="输入 U 本位永续代码，如 1000PEPEUSDT" />
+        <button type="button" id="btnWatchAdd" class="btn secondary">加入自选</button>
+      </div>
+      <p id="watchMsg" class="watch-msg"></p>
+      <label class="scan-label" for="watchFilter">在自选中扫描</label>
+      <input id="watchFilter" type="search" autocomplete="off" placeholder="过滤自选列表（不会搜索全市场）" />
+      <div id="watchList" class="watch-list" role="listbox" aria-label="自选交易对"></div>
+    </section>
+
+    <section class="panel readonly">
+      <div class="row">
+        <span class="label">当前交易对</span>
+        <span id="symbol" class="value">—</span>
+      </div>
+      <div class="row">
+        <span class="label">账户余额</span>
+        <span class="value"><span id="balance">—</span> <span class="unit">USDT</span></span>
+      </div>
+      <p id="balanceField" class="hint"></p>
+      <div class="row">
+        <span class="label">标记价格</span>
+        <span id="mark" class="value">—</span>
+      </div>
+      <div class="row">
+        <span class="label">杠杆 / 保证金</span>
+        <span class="value">20x / 全仓（固定）</span>
+      </div>
+      <div class="row accent">
+        <span class="label">风险金额</span>
+        <span class="value"><span id="risk">—</span> <span class="unit">USDT</span></span>
+      </div>
+      <p class="hint">若止损触发，亏损金额等于账户余额的 5%；数量由止损距离自动计算，不可手填。</p>
+      <div class="row accent">
+        <span class="label">计算数量</span>
+        <span id="qty" class="value">—</span>
+      </div>
+      <div class="row">
+        <span class="label">名义价值</span>
+        <span class="value"><span id="notional">—</span> <span class="unit">USDT</span></span>
+      </div>
+    </section>
+
+    <section class="panel macd-panel" aria-labelledby="macdTitle">
+      <div class="panel-head">
+        <h2 id="macdTitle">MACD 参考</h2>
+        <p class="hint tight">仅供参考，不影响开单。与当前开单方向相同标绿，相反标红；未选方向或无信号为灰色。</p>
+      </div>
+      <div class="macd-tags">
+        <div id="macdCross" class="macd-tag neutral" aria-live="polite">—</div>
+        <div id="macdDiv" class="macd-tag neutral" aria-live="polite">—</div>
+      </div>
+      <p id="macdDetail" class="hint tight macd-detail"></p>
+    </section>
+
+    <section class="panel actions">
+      <p class="actions-caption">交易操作：填止损、选方向、开单。周期与均线 / Supertrend 只用于辅助填写止损，不会改风控，也不会自动选方向。上方 MACD 标注同样只做参考，不参与开单闸门。</p>
+
+      <div class="tf-block">
+        <span class="stop-label" id="tfLabel">周期</span>
+        <div class="tf-group" id="tfGroup" role="radiogroup" aria-labelledby="tfLabel">
+          <button type="button" class="btn chip tf" data-interval="15m" aria-pressed="true">15min</button>
+          <button type="button" class="btn chip tf" data-interval="1h" aria-pressed="false">1h</button>
+          <button type="button" class="btn chip tf" data-interval="4h" aria-pressed="false">4h</button>
+          <button type="button" class="btn chip tf" data-interval="1d" aria-pressed="false">1日</button>
+        </div>
+      </div>
+
+      <div class="stop-head">
+        <label class="stop-label" for="stopInput">止损价（必填）</label>
+        <div class="indicator-choices" role="group" aria-label="按指标填写止损">
+          <button type="button" id="btnMa" class="btn chip indicator" aria-pressed="false">
+            均线 <span class="param-label" id="maParams">SMA20</span>
+          </button>
+          <button type="button" id="btnSt" class="btn chip indicator" aria-pressed="false">
+            Supertrend <span class="param-label" id="stParams">ATR10 × 3</span>
+          </button>
+        </div>
+      </div>
+      <input id="stopInput" type="text" inputmode="decimal" autocomplete="off" placeholder="填写止损价格" />
+      <p id="indicatorMsg" class="indicator-msg"></p>
+
+      <div class="sides">
+        <button type="button" id="btnLong" class="btn side long" aria-pressed="false">做多</button>
+        <button type="button" id="btnShort" class="btn side short" aria-pressed="false">做空</button>
+      </div>
+
+      <button type="button" id="btnOpen" class="btn open" disabled>开单</button>
+    </section>
+
+    <section id="result" class="result" hidden>
+      <div id="resultTitle" class="result-title"></div>
+      <p id="resultBody" class="result-body"></p>
+    </section>
+
+    <section class="panel positions-panel" aria-labelledby="posTitle">
+      <div class="panel-head">
+        <h2 id="posTitle">持仓与止损状态</h2>
+      </div>
+      <div id="unprotectedAlarm" class="alarm hidden" role="alert">
+        警告：存在未受保护的仓位。止损未挂上，请立即处理，不要把它当作已保护。
+      </div>
+      <div id="positionList" class="position-list">
+        <p class="empty">当前没有持仓</p>
+      </div>
+      <p id="fillHint" class="hint"></p>
+    </section>
+
+    <section class="panel log-panel" aria-labelledby="logTitle">
+      <div class="panel-head">
+        <h2 id="logTitle">操作日志</h2>
+        <p class="hint tight">时间均为 Asia/Shanghai。不会记录密钥。</p>
+      </div>
+      <div id="logList" class="log-list">
+        <p class="empty">暂无记录</p>
+      </div>
+    </section>
+    <section class="panel api-panel" aria-labelledby="apiTitle">
+      <div class="panel-head">
+        <h2 id="apiTitle">API 设置</h2>
+        <p class="hint tight">每个人填自己的币安 API。不填就是模拟模式（独立的模拟账户，初始余额 1000 USDT）。</p>
+      </div>
+      <label class="stop-label" for="apiMode">环境</label>
+      <select id="apiMode" class="api-input">
+        <option value="mock">模拟 mock（不需要 API）</option>
+        <option value="testnet">测试网 testnet</option>
+        <option value="live">实盘 live</option>
+      </select>
+      <p id="liveNote" class="hint tight api-note"></p>
+      <div id="apiFields">
+        <label class="stop-label" for="apiKey">API Key</label>
+        <input id="apiKey" class="api-input" type="text" autocomplete="off" spellcheck="false" placeholder="粘贴你的 API Key" />
+        <label class="stop-label" for="apiSecret">API Secret</label>
+        <input id="apiSecret" class="api-input" type="password" autocomplete="new-password" spellcheck="false" placeholder="粘贴你的 API Secret" />
+      </div>
+      <div class="api-actions">
+        <button type="button" id="btnApiSave" class="btn secondary">保存并验证</button>
+        <button type="button" id="btnApiClear" class="btn secondary danger-text">清除</button>
+      </div>
+      <p id="apiStatus" class="watch-msg"></p>
+      <ul class="api-tips">
+        <li>币安创建 API 时只勾「允许合约」，<b>不要开提现</b>。</li>
+        <li>IP 白名单建议填服务器出口 IP：<code id="egressIp">读取中…</code></li>
+        <li id="keyStorageNote">Key 保存在你自己的浏览器里，下单时经本服务器签名转发给币安，服务器不保存。</li>
+        <li>测试网 Key 要到 testnet.binancefuture.com 单独申请，和实盘不通用。</li>
+      </ul>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+// 唯一需要你改的地方（也可以直接在 Xcode 的 Signing & Capabilities 里改）。
+// Bundle ID 必须全球唯一；如果 Xcode 提示 "cannot be registered"，把前缀改成别的，例如 com.你的拼音名。
+OC_BUNDLE_PREFIX = com.opencontroller.$(USER:rfc1034identifier)
+// 可选：填你的 Team ID。不填也行，到 Xcode 里两个 target 各选一次 Team（Personal Team）即可。
+DEVELOPMENT_TEAM =
