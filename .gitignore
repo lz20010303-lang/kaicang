@@ -1,0 +1,40 @@
+# Secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Web runtime data (keep web/data/.gitkeep)
+web/data/*.json
+web/data/*.jsonl
+web/data/run/
+web/data/clients/
+*.log
+
+# Swift / Xcode
+.build/
+.swiftpm/
+.parity/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# OS
+.DS_Store

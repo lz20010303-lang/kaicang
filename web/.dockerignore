@@ -1,0 +1,19 @@
+# Never ship local state, secrets, tests or caches into the image.
+.env
+.env.*
+!.env.example
+data/
+*.jsonl
+*.log
+tests/
+.pytest_cache/
+**/__pycache__/
+*.pyc
+.venv/
+venv/
+.git/
+.gitignore
+scripts/
+.DS_Store
+.coverage
+htmlcov/
